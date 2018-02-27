@@ -3,6 +3,29 @@ import datetime
 
 from .. app import db
 
+#on crée un modèle pour la typologie des relations.
+class Relationship(db.Model):
+    __tablename__ = "relationship"
+    relationship_id = db.Column(db.Integer, nullable=True, autoincrement=True, primary_key=True)
+    relationship_type= db.Column(db.String(45))
+    #liaison avec la table connexion
+    connexions =db.relationship("Connexion", back_populates="relationships")
+#les éléments en relation avec l'API devront être repris.
+
+#création de la table de concordances des relations entre les lieux.
+class Connexion(db.Model):
+    __tablename__="connexion"
+    connexion_id = db.Column(db.Integer, nullable=True, autoincrement=True, primary_key=True)
+    connexion_relationship_id = db.Column(db.Integer, db.ForeignKey('relationship.relationship_id'))
+    connexion_from_place_id = db.Column(db.Integer, db.ForeignKey('place.place_id'))
+    connexion_to_place_id= db.Column(db.Integer, db.ForeignKey('place.place_id'))
+    #Spécification de la colonne qui doit être considérée selon le cas de place_id.
+    connexion_from =db.relationship("Place", foreign_keys='connexion_from_place_id')
+    connexion_to = db.relationship("Place", foreign_keys='connexion_to_place_id')
+    #jointures avec les autres tables
+    relationships =db.relationship("Relationship", back_populates="connexions")
+    place = db.relationship("Place", back_populates="connexions")
+
 
 class Authorship(db.Model):
     __tablename__ = "authorship"
@@ -29,7 +52,8 @@ class Place(db.Model):
     place_latitude = db.Column(db.Float)
     place_type = db.Column(db.String(45))
     authorships = db.relationship("Authorship", back_populates="place")
-
+    #jointure avec la table connexion.
+    connexions = db.relationship("Connexion", back_populates="place")
     def to_jsonapi_dict(self):
         """ It ressembles a little JSON API format but it is not completely compatible
 
