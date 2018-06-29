@@ -2,6 +2,7 @@ from warnings import warn
 
 
 LIEUX_PAR_PAGE = 2
+#Cette constante n'est pas utilisée car ne fonctionne pas
 BIBLIOS_PAR_PAGE = 2
 
 SECRET_KEY = "JE SUIS UN SECRET !"

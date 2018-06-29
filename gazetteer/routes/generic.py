@@ -3,12 +3,14 @@ from flask_login import current_user, login_user, logout_user, login_required
 
 from ..app import app, login
 from ..constantes import LIEUX_PAR_PAGE
-from ..modeles.donnees import Place, Biblio, Relation, Authorship, Link, links
+from ..modeles.donnees import Place, Biblio, Relation, Authorship#, Link, Link_relation
 from ..modeles.utilisateurs import User
 
+"""
+# a debugger
 #configuration du test de performance de SQL Alchemy
 from flask_sqlalchemy import get_debug_queries
-from config import DATABASE_QUERY_TIMEOUT
+#from config import DATABASE_QUERY_TIMEOUT
 
 @app.after_request
 def after_request(response):
@@ -16,7 +18,7 @@ def after_request(response):
         if query.duration >= DATABASE_QUERY_TIMEOUT:
             app.logger.warning("SLOW QUERY: %s\nParameters: %s\nDuration: %fs\nContext: %s\n" % (query.statement, query.parameters, query.duration, query.context))
     return response
-
+"""
 @app.route("/")
 def accueil():
     """ Route permettant l'affichage d'une page accueil
@@ -26,6 +28,11 @@ def accueil():
     references = Biblio.query.order_by(Biblio.biblio_id.desc()).limit(5).all()
     return render_template("pages/accueil.html", nom="Gazetteer", lieux=lieux, references=references)
 
+@app.route("/apropos")
+def apropos():
+    """ Route permettant l'affichage de la page à propos
+    """
+    return render_template("pages/apropos.html", nom="Gazetteer")
 
 @app.route("/place/<int:place_id>")
 def lieu(place_id):
@@ -36,10 +43,10 @@ def lieu(place_id):
     unique_lieu = Place.query.get(place_id)
 #Après avoir capturé un objet dans la variable unique_lieu
     reference = unique_lieu.relations
-    liaison = unique_lieu.link_place2
+    #liaison = unique_lieu.link_place2
 #Je capture dans une varible la liste des relations
 
-    return render_template("pages/place.html", nom="Gazetteer", lieu=unique_lieu, reference=reference, liaison=liaison)
+    return render_template("pages/place.html", nom="Gazetteer", lieu=unique_lieu, reference=reference)#, liaison=liaison)
 
 
 @app.route("/recherche")
@@ -66,7 +73,6 @@ def recherche():
         lieux = Place.query.filter(
             Place.place_nom.like("%{}%".format(motclef))
         ).paginate(page=page, per_page=LIEUX_PAR_PAGE)
-        titre = "Résultat pour la recherche `" + motclef + "`"
         references = Biblio.query.filter(
             Biblio.biblio_titre.like("%{}%".format(motclef))
         ).paginate(page=page, per_page=LIEUX_PAR_PAGE)
@@ -82,6 +88,7 @@ def recherche():
         titre=titre,
         keyword=motclef
     )
+
 
 
 @app.route("/browse")
@@ -106,7 +113,8 @@ def browse():
 
 @app.route("/moteur_biblio")
 def moteur_biblio():
-    """ Route permettant la recherche plein-texte
+    """ Route permettant l'affichage des dernières
+    données bibliographiques enregistrées
     """
     # On préfèrera l'utilisation de .get() ici
     #   qui nous permet d'éviter un if long (if "clef" in dictionnaire and dictonnaire["clef"])
@@ -179,8 +187,8 @@ def deconnexion():
     flash("Vous êtes déconnecté-e", "info")
     return redirect("/")
 
-@login_required
 @app.route("/depot", methods=["POST", "GET"])
+@login_required
 def depot():
     """Route gérant la création de lieux"""
     if request.method == "POST":
@@ -228,8 +236,8 @@ def modif_lieu(place_id):
         return render_template("pages/modif_lieu.html", lieu=unique_lieu)
 
 
-@login_required
 @app.route("/creer_biblio", methods=["POST", "GET"])
+@login_required
 def creer_biblio():
     """
     Route gérant la création de références bibliographiques
@@ -254,21 +262,25 @@ def creer_biblio():
 
 @app.route("/biblio/<int:biblio_id>")
 def biblio(biblio_id):
-    """ Route permettant l'affichage des données d'une référence bibliographique
-    :param biblio_id: Identifiant numérique de la référence bibliographique
+    """ Route permettant l'affichage des données d'une donnée bibliographique
+    :param biblio_id: Identifiant numérique de la donnée bibliographique
     """
     # On récupère le tuple correspondant aux champs de la classe Biblio
     unique_biblio = Biblio.query.get(biblio_id)
+    if not unique_biblio:
+        flash("Cette donnée n'existe pas encore mais vous pouvez la créer !")
+        return render_template("pages/creer_biblio.html", nom="Gazetteer")
     lieux = unique_biblio.relations
-#Je capture dans une varible la liste des relations
-    print(lieux)
+#Liste des relations
     return render_template("pages/biblio.html", nom="Gazetteer", biblio=unique_biblio, lieux=lieux)
 
-@login_required
+
 @app.route("/modif_biblio/<int:biblio_id>", methods=["POST", "GET"])
+@login_required
 def modif_biblio(biblio_id):
     """
-    Route permettant la modification des données d'une référence bibliographique
+    Route permettant la modification des données d'une donnée bibliographique
+    :param biblio_id: Identifiant numérique de la donnée bibliographique
     """
     status, donnees = Biblio.modif_biblio(
         id=biblio_id,
@@ -282,21 +294,22 @@ def modif_biblio(biblio_id):
     if status is True :
         flash("Merci pour votre contribution !", "success")
         unique_biblio = Biblio.query.get(biblio_id)
-        return redirect("/") #vers le lieu qu'il vient de créer.
+        return redirect("/pages/biblio.html", biblio=unique_biblio) #vers la donnée que l'utilisateur vient de créer.
 
     else:
         flash("Les erreurs suivantes ont été rencontrées : " + ",".join(donnees), "error")
         unique_biblio = Biblio.query.get(biblio_id)
         return render_template("pages/modif_biblio.html", biblio=unique_biblio)
 
+"""
 #je dois encore faire la route pour la page link/link_id
-@app.route("/link/<int:link_id>")
+@app.route("/Link/<int:link_id>")
 def link(link_id):
-    """ Route permettant l'affichage des données d'une connexion
-    :param link_id: Identifiant numérique de la référence bibliographique
-    """
+    # Route permettant l'affichage des données d'une connexion
+    #:param link_id: Identifiant numérique de la référence bibliographique
+
     # On récupère le tuple correspondant aux champs de la classe Biblio
-    unique_link = link.query.join(link, (links.c.link_id == links.link_id)).get(id)
+    unique_link = Link.query.join(link, (Link.c.link_id == link.link_id)).get(id)
     lieux = unique_link.Link
     print(lieux)
     return render_template("pages/link.html", nom="Gazetteer", biblio=unique_link, lieux=lieux)
@@ -305,9 +318,9 @@ def link(link_id):
 @login_required
 @app.route("/create_link",methods=["POST", "GET"])
 def create_link():
-    """ Route permettant l' affichage du formulaire de la création de la connexion entre deux.
-    :param link_id: Identifiant numérique de la référence connexion
-    """
+    # Route permettant l' affichage du formulaire de la création de la connexion entre deux.
+    #:param link_id: Identifiant numérique de la référence connexion
+
     if request.method == "POST":
         statut, donnees = links.create_link(
             lieu_1=request.form.get("ID du lieu 1", None),
@@ -325,15 +338,15 @@ def create_link():
 @login_required
 @app.route("/modif_link/<int:link_id>", methods=["POST", "GET"])
 def modif_link(link_id):
-    """ Route permettant l' affichage du formulaire de modification de la connexion entre deux.
-    :param link_id: Identifiant numérique de la référence connexion
-    """
-    """état fonctionnel pour seulement la connexion sans la caractérisation
+    #Route permettant l' affichage du formulaire de modification de la connexion entre deux.
+    #param link_id: Identifiant numérique de la référence connexion
+    #
+    #état fonctionnel pour seulement la connexion sans la caractérisation
     status, donnees = links.modif_link(
         id=link_id,
         lieu_1=request.args.get("ID du lieu 1", None),
         lieu_2=request.args.get("ID du lieu 2", None),
-    )"""
+    )
 #db.and pour essayer de mettre dans la même route les fonctions de caractéristations et de connexions entre les lieux
     status, donnees = link.query.join(link, (links.c.link_id == links.link_id)).modif_link(
     id = link_id,
@@ -353,12 +366,12 @@ def modif_link(link_id):
         unique_link = link.query.join(link, (links.c.link_id == links.link_id)).get(id)
         return render_template("pages/modif_link.html", connection=unique_link)
 
-
+"""
 
 @app.route("/associer_reference/<int:place_id>", methods=["POST", "GET"])
 def index_biblio(place_id):
     """ Route permettant d'afficher toutes les références bibliographiques
-    en vue de créer une relation
+    pour créer une relation
     :param place_id: identifiant numérique du lieu qu'on veut rattacher
     à une référence bibliographique
     """
@@ -386,7 +399,7 @@ def index_biblio(place_id):
 @app.route("/index_lieux/<int:biblio_id>", methods=["POST", "GET"])
 def index_lieux(biblio_id):
     """ Route permettant d'afficher toutes les lieux
-    en vue de créer une relation avec la référence bibliographique affichée
+    pour une relation avec la référence bibliographique affichée
     :param biblio_id: identifiant numérique du lieu qu'on veut rattacher
     à une référence bibliographique
     """
@@ -410,6 +423,7 @@ def index_lieux(biblio_id):
         lieux=lieux)
 
 @app.route("/supprimer_association/<int:relation_id>", methods=["POST", "GET"])
+@login_required
 def supprimer_association(relation_id):
     """Route pour supprimer la relation
     entre une référence et un lieu
@@ -423,18 +437,47 @@ def supprimer_association(relation_id):
         relation_biblio_id = request.form.get("reference", None),
         relation_place_id = request.form.get("lieu", None)
         )
-#Problème de chargement de la session
-        error = "sqlalchemy.orm.exc.DetachedInstanceError"
-        if error:
+#Erreur SQLAlchemy qui n'empêche pas la bonne mise en oeuvre de la manipulation
+        detached_error = "sqlalchemy.orm.exc.DetachedInstanceError"
+        if detached_error:
             flash("Suppression réussie!", "success")
             return redirect("/")
-        if status is True:
+        elif status is True:
             flash("Suppression réussie!", "success")
-            return redirect("/", )
+            return redirect("/")
         else:
             flash("Les erreurs suivantes ont été rencontrées : " + ",".join(donnees), "error")
             return render_template("pages/supprimer_association.html", relation=relation)
     else:
         return render_template("pages/supprimer_association.html", relation=relation)
-    flash("")
-    return redirect("/supprimer_association.html", relation=relation)
+
+@app.route("/supprimer_biblio/<int:biblio_id>", methods=["POST", "GET"])
+@login_required
+def supprimer_biblio(biblio_id):
+    """Route pour supprimer une donnée bibliographique
+    :param biblio_id: identifiant numérique de la donnée bibliographique
+    :return render_template or redirect : redirection vers une nouvelle route
+    """
+    biblio = Biblio.query.get(biblio_id)
+    #associations = endroit.relations
+    if request.method == "POST":
+        status, donnees = Biblio.supprimer_biblio(
+        id=biblio_id,
+        titre=request.args.get("titre", None),
+        auteur=request.args.get("auteur", None),
+        date=request.args.get("date", None),
+        lieu=request.args.get("lieu", None),
+        typep=request.args.get("typep", None))
+#Erreur SQLAlchemy qui n'empêche pas la bonne mise en oeuvre de la manipulation
+        detached_error = "sqlalchemy.orm.exc.DetachedInstanceError"
+        if detached_error:
+            flash("Suppression réussie!", "success")
+            return redirect("/")
+        elif status is True:
+            flash("Suppression réussie!", "success")
+            return redirect("/")
+        else:
+            flash("Les erreurs suivantes ont été rencontrées : " + ",".join(donnees), "error")
+            return render_template("pages/supprimer_biblio.html", biblio=biblio)
+    else:
+        return render_template("pages/supprimer_biblio.html", biblio=biblio)

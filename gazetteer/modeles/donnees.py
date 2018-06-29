@@ -18,25 +18,36 @@ class Authorship(db.Model):
         }
 
 #creation d'une table de liaison entre link et Place
-links=db.Table('links',
-    db.Column('link_id', db.Integer, db.ForeignKey('link.link_id')),
-    db.Column('link_place1_id', db.Integer, db.ForeignKey('place.place_id')),
-    db.Column('link_place2_id', db.Integer, db.ForeignKey('place.place_id')),
-    )
-
+#links=db.Table('links',
+#    db.Column('link_id', db.Integer, db.ForeignKey('link.link_id')),
+#    db.Column('link_place1_id', db.Integer, db.ForeignKey('place.place_id')),
+#    db.Column('link_place2_id', db.Integer, db.ForeignKey('place.place_id')),
+#    )
+"""
 # On crée une class link pour gérer la nature des relations.
-class Link(db.Model):
-    link_id = db.Column(db.Integer, unique=True, nullable=False, primary_key=True, autoincrement=True)
+class Link_relation(db.Model):
+    nature_id = db.Column(db.Integer, nullable=False, autoincrement=True, primary_key=True)
     link_relation_type = db.Column(db.String(45), nullable=False)
     link_relation_description = db.Column(db.String(240))
-    typed = db.relationship(
-        'Link', secondary=links,
-        backref=db.backref('link', lazy='dynamic'))
+    typed = db.relationship("Link", back_populates="links")
+
+#classe Relation
+class Link(db.Model):
+    #Création d'une table d'associations entre table Nature
+    #et la table Place
+    __tablename__ = "link"
+    link_id = db.Column(db.Integer, nullable=False, autoincrement=True, primary_key=True)
+    nature_id = db.Column(db.Integer, db.ForeignKey('link_relation.nature_id'))
+    link_place1_id = db.Column(db.Integer, db.ForeignKey('place.place_id'))
+    link_place2_id = db.Column(db.Integer, db.ForeignKey('place.place_id'))
+#Jointure
+    links = db.relationship("Link_relation", back_populates="typed")
+    lien = db.relationship("Place", back_populates="connexions")
 
 def to_jsonapi_dict(self):
-    """ It ressembles a little JSON API format but it is not completely compatible
-    :return:
-    """
+    #It ressembles a little JSON API format but it is not completely compatible
+    #:return:
+
     return {
         "type": "place",
         "id": self.link_id,
@@ -46,6 +57,7 @@ def to_jsonapi_dict(self):
              }
 
         }
+"""
 # On crée notre modèle
 class Place(db.Model):
     """Définit une classe lieu sur le modèle SQL"""
@@ -58,58 +70,31 @@ class Place(db.Model):
 #jointure biblio & utilisateur
     authorships = db.relationship("Authorship", back_populates="place")
     relations = db.relationship("Relation", back_populates="place")
-#    link_place1 = db.relationship("link", primaryjoin="Place.place_id==link.link_place1_id")
-#    link_place2= db.relationship("link", primaryjoin="Place.place_id==link.link_place2_id")
-#    liens=db.relationship("link", back_populates="place")
-#création d'un mapping avec la table de liaison
-    linked = db.relationship(
-        'Place', secondary=links,
-        primaryjoin=(links.c.link_place1_id == place_id),
-        secondaryjoin=(links.c.link_place2_id == place_id),
-        backref=db.backref('place', lazy='dynamic'), lazy='dynamic')
-
+#sans prise en compte de l'ordre des deux place_id.
+    #connexions = db.relationship("Link", )
+    """connexions = db.relationship(
+          "Place", secondary="Link",
+            primaryjoin="Link.c.link_place1_id == place_id",
+            secondaryjoin="Link.c.link_place2_id == place_id",
+            back_populates="lien")"""
 
     def to_jsonapi_dict(self):
         """ It ressembles a little JSON API format
         but it is not completely compatible
-        :return: dictionnaire avec infos de la table SQL
+
+        Affichage des données d'un lieu lorsque celui-ci
+        n'est pas lié à une donnée bibliographique
+        :return: dictionnaire
         """
         return {
-            "type": "place",
-            "id": self.place_id,
-            "attributes": {
-                "name": self.place_nom,
-                "description": self.place_description,
-                "longitude": self.place_longitude,
-                "latitude": self.place_latitude,
-                "category": self.place_type,
-
-            },
-            "links": {
-                "self": url_for("lieu", place_id=self.place_id, _external=True),
-                "json": url_for("api_places_single", place_id=self.place_id, _external=True),
-                },
-
             "relations": {
-            "editions":[
-            author.author_to_json()
-            for author in self.authorships
-            ],
-            #biblio fait référence à ce sur quoi l'on boucle
-                "references":[reference.association_to_json()
-                 for reference in self.relations]
-
-                 }
-
-             }
-
-    def dictionnaire_2(self):
-        """ Permet d'éviter une boucle infinie lors
-        de l'établissement des relations
-        Problème cependant car la boucle fonctionne une fois de trop
-        :return: dictionnaire avec infos de la table SQL
-        """
-        return {
+                "editions": [
+                    author.author_to_json()
+                    for author in self.authorships
+                ],
+                # biblio fait référence à ce sur quoi l'on boucle
+                "references": [reference.association_to_json()
+                               for reference in self.relations]},
                 "type": "place",
                 "id": self.place_id,
                 "attributes": {
@@ -123,9 +108,79 @@ class Place(db.Model):
                 "links": {
                     "self": url_for("lieu", place_id=self.place_id, _external=True),
                     "json": url_for("api_places_single", place_id=self.place_id, _external=True),
-                    }}
+                },
+
+            }
+
+    def to_jsonapi_2_dict(self):
+        """
+        Fonction pour gérer l'affichage des données
+        sans redondance
+        en cas de relation
+        entre une donnée bibliographique et un lieu dans l'API
+        :return: dictionnaire data
+        """
+        data = {
+            "editions":[
+            author.author_to_json()
+            for author in self.authorships
+            ],
+            #biblio fait référence à ce sur quoi l'on boucle
+                "relation":[reference.association_to_json()
+                 for reference in self.relations
+                              ]
+
+             }
+        return data
 
 
+    def to_jsonapi_dict_2(self):
+        """
+        Fonction pour gérer l'affichage des lieux
+        dans le moteur de recherche de l'API
+        :return: dictionnaire data
+        """
+        data = {
+            "type": "place",
+            "id": self.place_id,
+            "attributes": {
+                "name": self.place_nom,
+                "description": self.place_description,
+                "longitude": self.place_longitude,
+                "latitude": self.place_latitude,
+                "category": self.place_type,
+
+            },
+            "links": {
+                "json": url_for("api_places_single", place_id=self.place_id, _external=True),
+                "self": url_for("lieu", place_id=self.place_id, _external=True)
+            }
+        }
+        return data
+
+    def dictionnaire_2(self):
+        """
+        Fonction pour gérer l'affichage des infos de la donnée bibliographique
+        en cas de relation avec un lieu dans l'API
+        :return: dictionnaire data
+        """
+        data = {
+                "id": self.place_id,
+                "type" : "place",
+                    "attributes": {
+                    "name": self.place_nom,
+                    "description": self.place_description,
+                    "longitude": self.place_longitude,
+                    "latitude": self.place_latitude,
+                    "category": self.place_type,
+
+                },
+                "links": {
+                    "self": url_for("lieu", place_id=self.place_id, _external=True),
+                    "json": url_for("api_places_single", place_id=self.place_id, _external=True)
+                    }
+        }
+        return data
 
     @staticmethod
     def modif_link(id,lieu_1, lieu_2, type, description):
@@ -147,7 +202,7 @@ class Place(db.Model):
             print(erreurs, titre, auteur, date, lieu, typep)
             return False, erreurs
 
-        connection = link.query.join(link, (links.c.link_id == links.link_id)).get(id)
+        connection = link.query.join(link, (link.c.link_id == links.link_id)).get(id)
 
         link.link_id=id
         link.link_relation_type=type
@@ -169,7 +224,7 @@ class Place(db.Model):
             return False, [str(erreur)]
 
     @staticmethod
-    def create_link(lieu_1, lieu_2):
+    def create_link(link_id,lieu_1, lieu_2):
         erreurs=[]
         if not lieu_1:
             erreurs.append("Le lieu 1 est nécessaire")
@@ -188,9 +243,10 @@ class Place(db.Model):
             print(erreurs,lieu_1, lieu_2)
             return False, erreurs
 
-        connection= links(
+        connection= link(
+        link_id=id,
         link_place1_id=lieu_1,
-        link_place2_id=lieu_2,
+        link_place2_id=lieu_2
         )
         print(connection)
         try:
@@ -212,6 +268,7 @@ class Place(db.Model):
         link_relation_type = type,
         link_relation_description = description,
         )"""
+
     def is_linked (self, place):
         return self.liked.filter(links.c.link_place2_id == place_id).count() > 0
 
@@ -316,10 +373,13 @@ class Biblio(db.Model):
     relations = db.relationship("Relation", back_populates="biblio")
 
     def to_jsonapi_dict(self):
-        """ Semblant d'API en JSON mais défauts de compatibilité
-        :return: dictionnaire biblio avec infos contenues dans la table SQL
         """
-        biblio = {
+        Semblant d'API en JSON mais défauts de compatibilité
+        Fonction pour gérer l'affichage d'une donnée bibliographique
+        lorsque celle-ci n'est pas en relation avec un lieu dans l'API
+        :return: dictionnaire data
+        """
+        data = {
             "type": "biblio",
             "id": self.biblio_id,
             "attributes": {
@@ -336,32 +396,72 @@ class Biblio(db.Model):
             },
 
             "relationships": {
-                     "endroits" : [
-                              endroit.association_to_json()
-                              for endroit in self.relations
-                          ]
-                     }}
-        return biblio
+                "endroits": [
+                    endroit.association_to_json()
+                    for endroit in self.relations
+                ]
+            }}
+        return data
+
+    def to_jsonapi_2_dict(self):
+        """ Semblant d'API en JSON mais défauts de compatibilité
+        Fonction pour gérer l'affichage sans redondance
+        des infos d'une donnée bibliographique
+        en cas de relation avec un lieu
+        :return: dictionnaire data
+        """
+        data = {
+            "infos": [
+                endroit.association_to_json()
+                for endroit in self.relations
+            ]
+        }
+        return data
+
+    def to_jsonapi_dict_2(self):
+        """
+        Fonction pour gérer l'affichage des données bibliographiques
+        dans le moteur de recherche dans l'API
+        :return: dictionnaire data
+        """
+        data = {
+            "type": "biblio",
+            "id": self.biblio_id,
+            "attributes": {
+                "titre": self.biblio_titre,
+                "auteur": self.biblio_auteur,
+                "date": self.biblio_date,
+                "lieu": self.biblio_lieu,
+                "category": self.biblio_type,
+
+            },
+            "links": {
+                "self": url_for("biblio", biblio_id=self.biblio_id, _external=True),
+                "json": url_for("api_biblios_single", biblio_id=self.biblio_id, _external=True)
+            }}
+        return data
 
     def dictionnaire_2(self):
         """ Semblant d'API en JSON mais défauts de compatibilité
-        :return: dictionnaire reference
+        Pour gérer l'affichage des infos de la table lieu
+        si la donnée bibliographique est en relation avec un lieu
+        :return: dictionnaire data
         """
-        reference ={
-            #"id": self.biblio_id,
+        data = {
+            "id": self.biblio_id,
             "attributes": {
                 "titre": self.biblio_titre,
                 "auteur": self.biblio_auteur,
                 "date": self.biblio_date,
                 "category": self.biblio_type,
-            #    "type": "biblio",
+                 "type": "biblio",
 
             },
             "links": {
-            #    "self": url_for("biblio", biblio_id=self.biblio_id, _external=True),
+                "self": url_for("biblio", biblio_id=self.biblio_id, _external=True),
                 "json": url_for("api_biblios_single", biblio_id=self.biblio_id, _external=True)
             }}
-        return reference
+        return data
 
 
     @staticmethod
@@ -454,6 +554,30 @@ class Biblio(db.Model):
         except Exception as erreur:
             return False, [str(erreur)]
 
+    @staticmethod
+    def supprimer_biblio(id, titre, auteur, date, lieu, typep):
+        """
+        Fonction supprimant la donnée bibliographique
+        :param biblio_id: identifiant de la donnée bibliographique conservé dans la table d'association
+        :returns: booleen
+        """
+
+        biblio = Biblio.query.get(id)
+        biblio.biblio_titre = titre
+        biblio.biblio_auteur = auteur
+        biblio.biblio_date = date
+        biblio.biblio_lieu = lieu
+        biblio.biblio_type = typep
+
+
+        try:
+            db.session.delete(biblio)
+            db.session.commit()
+            return True, biblio
+
+        except Exception as erreur:
+            return False, [str(erreur)]
+
 
 #classe Relation
 class Relation(db.Model):
@@ -466,11 +590,12 @@ class Relation(db.Model):
 #Jointure
     biblio = db.relationship("Biblio", back_populates="relations")
     place = db.relationship("Place", back_populates="relations")
-#Problème de mini-boucle
+
+#Problème de boucle dans la boucle pour l'API
     def association_to_json(self):
         return {
-            "reference": self.biblio.dictionnaire_2(),
-            "endroit": self.place.dictionnaire_2()
+            "biblio": self.biblio.dictionnaire_2(),
+            "place": self.place.dictionnaire_2()
         }
 
     @staticmethod
@@ -534,110 +659,3 @@ class Relation(db.Model):
 
         except Exception as erreur:
             return False, [str(erreur)]
-
-"""
-#création d'une classe pour les connexions entre les lieux
-class link(db.Model):
-    __tablename__="link"
-    link_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-#    link_place1_id =db.Column(db.Integer, db.ForeignKey('place.place_id'))
-#    link_place2_id= db.Column(db.Integer, db.ForeignKey('place.place_id'))
-    link_relation_type = db.Column(db.String(45), nullable=False)
-    link_relation_description = db.Column(db.String(240))
-#jointures
-<<<<<<< HEAD
-#    place1 = db.relationship("Place", foreign_keys=[link_place1_id])
-#    place2 = db.relationship ("Place", foreign_keys= [link_place2_id])
-    place=db.relationship("Place", back_populates="link") # si seulement ce fragment de code crée: sqlalchemy.exc.AmbiguousForeignKeysError: Could not determine join condition between parent/child tables on relationship Place.liens-
-    #, primaryjoin=link_place1_id==Place.place_id)
-    place=db.relationship("Place", back_populates="link") #, primaryjoin=link_place2_id==Place.place_id) ce fragment de code crée : One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper|Place|place'
-    # création de la gestions des liens entre les lieux."""
-"""
-=======
-    place1 = db.relationship("Place", foreign_keys=[link_place1_id])
-    place2 = db.relationship ("Place", foreign_keys= [link_place2_id])
-
-
-    @staticmethod
-    def creer_liaison_1(link_place1_id, link_place2_id, link_relation_type, link_relation_description):
-        erreurs = []
-        if not link_place1_id:
-            erreurs.append("Le nom du lieu est obligatoire")
-        if not link_place2_id:
-            erreurs.append("Il faut indiquer la latitude")
-        if not link_relation_type:
-            erreurs.append("Il faut indiquer la longitude")
-
-        # Si on a au moins une erreur
-        if len(erreurs) > 0:
-            print(erreurs, link_place1_id, link_place2_id, link_relation_type)
-            return False, erreurs
-
-        liaison = link(
-            link_place1_id=link_place1_id,
-            link_place2_id=link_place2_id,
-            link_relation_type=link_relation_type,
-            link_relation_description=link_relation_description
-            # changer le nom "type"
-        )
-        print(liaison)
-        try:
-            # On l'ajoute au transport vers la base de données
-            db.session.add(liaison)
-            # On envoie le paquet
-            db.session.commit()
-
-            # On renvoie l'utilisateur
-            return True, liaison
-
-        except Exception as erreur:
-            return False, [str(erreur)]
-
-    # création de la gestions des liens entre les lieux.
->>>>>>> upstream/master
-    @staticmethod
-    def creer_liaison(lieu1, relation, lieu2, description):
-        Crée une nouvelle connexion entre deux lieux.
-        :param lieu1: Lieu 1 de la relation
-        :param lieu2: lieu 2 de la relation
-        :param relation: type de la relation
-        :param description: description de la relation
-
-
-# vérif des champs
-        erreurs = []
-        if not lieu1:
-            erreurs.append("Il faut un lieu 1 pour créer une relation entre deux lieux")
-        #if not relation:
-        #    erreurs.append("Il faut une nature pour caractériser la relation entre deux lieux")
-        if not lieu2:
-            erreurs.append("Il faut un lieu 2 pour créer une relation entre deux lieux")
-        if lieu1 == lieu2:
-            erreurs.append("Une relation ne peut se faire qu'entre deux lieux différents. ")
-# retrait de cette ligne qui crée un bug.
-        #if not relation =="historique" or relation=="administrative" or relation=="topographique":
-            erreurs.append("La nature de la relation doit être administrative, topographique ou historique. ")
-        # Si on a au moins une erreur
-        if len(erreurs) > 0:
-            return False, erreurs
-
-        lien= link(
-                    link_place1_id=lieu1,
-                    link_relation_type=relation,
-                    link_place2_id=lieu2,
-                    link_relation_description=description
-                        )
-
-        print(link)
-
-        try:
-            #envoie vers la db
-            db.session.add(link)
-            #envoie de la liaison.
-            db.session.commit()
-
-            return True, lien
-
-        except Exception as erreur:
-            return False, [str(erreur)]
-# comparaison des lieu1 et lieu2"""

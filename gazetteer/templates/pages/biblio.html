@@ -20,6 +20,7 @@
                     {%endif%}
                     {%endfor%}
                     {%if current_user.is_authenticated%}
+                        <dt><a class="nav-link" href="{{ url_for('supprimer_biblio', biblio_id=biblio.biblio_id) }}">Supprimer cette référence</a></dt>
                     <dt><a class="nav-link" href="{{url_for('creer_biblio', biblio_id=biblio.biblio_id)}}">Ajouter une nouvelle référence</a></dt>
                     <dt><a class="nav-link" href="{{url_for('modif_biblio', biblio_id=biblio.biblio_id)}}">Editer la bibliographie</a></dt>
                     <dt><a class="nav-link" href="{{url_for('index_lieux', biblio_id=biblio.biblio_id)}}">Lier cette référence à un lieu</a><dt>

@@ -3,23 +3,8 @@
 {% block titre %}| Index des lieux : Page {{lieux.page}} {%endblock%}
 
 {% block corps %}
-
+ <div>N.B. : Vous ne pouvez lier qu'un seul lieu à une donnée bibliographique</div>
     <h1>Index des lieux</h1>
-
-  <div class="row">
-<form class="form" method="POST" action="{{url_for('index_lieux', biblio_id=biblio.biblio_id)}}">
-  {%for lieu in lieux.items %}
-<div class="checkbox col-sm-2">
-  <label><input type="checkbox" name="place_id" id="place_id" value="{{lieu.place_id}}">
-    {{lieu.place_nom}}</label>
-</div>
-{%endfor%}
-
-    <div>
-      <button type="submit" class="btn btn-primary" >Contribuer</button>
-    </div>
-    </div>
-<nav aria-label="research-pagination">
 <ul class="pagination">
   {%- for page in lieux.iter_pages() %}
       {% if page %}
@@ -32,15 +17,32 @@
             <a class="page-link">{{page}} <span class="sr-only">(actuelle)</span></a>
           </li>
         {% endif %}
+<div class="row">
+<form class="form" method="POST" action="{{url_for('index_lieux', biblio_id=biblio.biblio_id)}}">
+  {%for lieu in lieux.items %}
+      <ul>
+          <input type="radio" name="place_id" id="place_id" value="{{lieu.place_id}}">
+    {{lieu.place_nom}}
 
-      {% else %}
+      </ul>
+{%endfor%}
+{% else %}
           <li class="page-item disabled">
             <a class="page-link">...</a>
           </li>
       {% endif %}
 {%- endfor %}
 </ul>
-</nav>
+    <div>
+      <button type="submit" class="btn btn-primary" >Contribuer</button>
+    </div>
+</form><p><a href="{{url_for('accueil')}}">Retour à l'accueil</a></p>
+    </div>
+
+
+
+
+
   
 
     {% endblock %}

@@ -1,0 +1,55 @@
+{% extends "conteneur.html" %}
+
+{% block titre %}| A propos{% endblock %}
+
+{% block corps %}
+<h1>A propos du projet</h1>
+<br/<
+<p>Gazetteer est produit dans le cadre du cours Python de l'Ecole Nationale des Chartes par Ella Duréault et Axelle Janiak
+</p>
+<br/>
+
+<h1>A propos de l'API</h1>
+<br/>
+<p>L'API Boatlas permet de récupérer un certain nombre d'informations liées aux ressources collectées dans l'application.
+<br/>Ci-après les éléments exprimés en gras sont les paramètres tandis que ceux en italique correspondent à l'emplacement où mettre vos données propres.</p>
+<br/>
+<p>Le contenu de lieu et de bibliographie est mobilisable à partir de l'<stong>ID</strong> de la ressource. L'utilisateur trouvera cette information dans l'url d'accès à chaque ressource. Chaque recherche lui rendra un résultat en JSON.</p>
+<br/>
+<h2>Accèder à une ressource par son ID</h2>
+<p>
+  <ul>
+    <li>Le chemin pour accèder à un lieu: http://127.0.0.1:5000/api/places/<i>id</i>.</li>
+      <li>Le chemin pour accèder à une référence bibliographique : http://127.0.0.1:5000/api/biblios/<i>id</i>.</li>
+    </ul>
+  </p>
+  <br/>
+<h2>Accèder à une ressource par recherche de mot-clef</h2>
+<p>La recherche par mot-clef correspond au paramètre <strong>q</strong>. On part de l'adresse suivante http://127.0.0.1:5000/api/places ou http://127.0.0.1:5000/api/biblios suivit de la chaîne <strong><i>?q=</i></strong> qui introduit la capacité de recherche, puis on ajoute le mot-clef suite après le égal.
+  <ul>
+      <li>ex: http://127.0.0.1:5000/api/places?q=<i>votre-mot-clef</i></li>
+      <li>ex: http://127.0.0.1:5000/api/biblios?q=<i>votre-mot-clef</i></li>
+    </ul>
+  Lorsque la recherche génère plusieurs pages de réponse, vous pouvez accèder directement à l'une d'elle grâce au paramètre page=<i>numéro-de-la-page</i></p>
+  <br/>
+  <h2>Lancer une recherche par proximité autour d'un lieu</h2>
+  <p>Un lieu se compose d'une latitude et d'une longitude, auquel on accède respectivement par <strong>x</strong> et <strong>y</strong>, et que l'on compléte par le rayon de recherche exprimé en kilométres sous le paramètre <strong>radius</strong>.
+    <ul>
+      <li> ex: http://127.0.0.1:5000/api/places/searchproximity?x=<i>12.4913</i>&y=<i>41.8876</i>&radius=<i>25</i>.
+        <br/>Nous recherchons tout lieu sur un rayon de 25km autour du Caelius Mons, du moins en théorie.</li></ul>
+      </p>
+      <br/>
+      <h2>Lancer une recherche dans un rectangle.</h2>
+      <p>Pour cette fonctionnalité de l'API. Il faut une latitude minimale et une maximale, de même pour la longitude.</p>
+          <p>La latitude nord  est exprimée par le paramètre <strong>w</strong>.</p>
+            <p>La latitude sud est exprimée par le paramètre <strong>x</strong>.</p>
+            <p>La longitude ouest est exprimée par le paramètre <strong>y</strong>.</p>
+              <p>La longitude est est exprimée par le paramètre <strong>z</strong>.</p>
+          <br>
+          <p>
+            <ul><li>ex: http://127.0.0.1:5000/api/places/searcharea?w=<i>48.8530</i>&x=<i>48.8565</i>&y=<i>2.3127</i>&z=<i>2.3499</i></li></ul>
+          <br/>Nous cherchons dans un espace compris entre l'hôpital des Invalides et la cathédrale de Notre-Dame de Paris. La latitude nord et la longitude est sont les coordonnées de Notre-Dame, celle sud et ouest proviennent des Invalides.
+        <br/>Faites attention les latitudes et les longitudes dans Boatlas sont exprimés en dégrés décimaux.</p>
+
+
+{% endblock %}

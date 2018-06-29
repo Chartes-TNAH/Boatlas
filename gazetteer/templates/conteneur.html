@@ -25,6 +25,9 @@
               <li class="nav-item">
                 <a class="nav-link" href="{{url_for("browse")}}">Navigation</a>
               </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{url_for("apropos")}}">À propos</a>
+              </li>
             {% if not current_user.is_authenticated %}
               <li class="nav-item">
                 <a class="nav-link" href="{{url_for("inscription")}}">Inscription</a>
@@ -63,4 +66,94 @@
         </div>
       </div>
     </body>
+    <!-- Footer -->
+<footer class="page-footer font-small stylish-color-dark pt-4 mt-4 text-white bg-dark justify-content-between">
+  <!-- Footer Links -->
+  <div class="container text-center text-md-left">
+    <!-- Grid row -->
+    <div class="row">
+      <!-- Grid column -->
+      <div class="col-md-4 mx-auto">
+
+        <!-- Content -->
+        <h5 class="font-weight-bold color-white text-uppercase mt-3 mb-4">Boatlas</h5>
+        <p>Gazetteer est produit dans le cadre du cours Python de l'Ecole Nationale des Chartes par Ella Duréault et Axelle Janiak</p>
+
+      </div>
+      <!-- Grid column -->
+
+      <hr class="clearfix w-100 d-md-none">
+
+      <!-- Grid column -->
+      <div class="col-md-2 mx-auto">
+        <!-- Links -->
+<h5 class="font-weight-bold text-uppercase mt-3 mb-4"></h5>
+        <ul class="list-unstyled">
+          <li>
+            <a href="{{url_for('accueil')}}">Home</a>
+          </li>
+          <li>
+            <a href="{{url_for("apropos")}}">À propos</a>
+          </li>
+          <li>
+            <a href="{{url_for("inscription")}}">Inscription</a>
+          </li>
+      </div>
+      <!-- Grid column -->
+      <hr class="clearfix w-100 d-md-none">
+      <!-- Grid column -->
+      <div class="col-md-2 mx-auto">
+        <!-- Links -->
+        <h5 class="font-weight-bold text-uppercase mt-3 mb-4"></h5>
+        <ul class="list-unstyled">
+          <li>
+            <a href="https://github.com/Chartes-TNAH/Boatlas">Repository Github</a>
+          </li>
+          <li>
+            <a href="{{url_for("depot")}}">Index des lieux</a>
+          </li>
+          <li>
+            <a href="{{url_for('moteur_biblio')}}">Index bibliographique</a>
+          </li>
+      </div>
+      <!-- Grid column -->
+      <hr class="clearfix w-100 d-md-none">
+      <!-- Grid column -->
+      <div class="col-md-2 mx-auto">
+        <h5 class="font-weight-bold text-uppercase mt-3 mb-4"></h5>
+        <ul class="list-unstyled">
+        {% if not current_user.is_authenticated %}
+                   <li><a class="text-success" href="{{url_for('connexion')}}">Connexion</a></li>
+                   {% endif %}
+                   {% if current_user.is_authenticated %}
+                   <li><a class="text-success" href="{{url_for('deconnexion')}}">Déconnexion</a></li>
+                   {% endif %}
+      </div>
+      <!-- Grid column -->
+    </div>
+    <!-- Grid row -->
+  </div>
+  <!-- Footer Links -->
+
+  <hr>
+  <!-- Call to action -->
+  <ul class="list-unstyled list-inline text-center py-2">
+    <ul class="list-unstyled list-inline text-center">
+      <ul class="social-network social-circle">
+                     <li class="list-inline-item"><a href="#" class="icoRss" title="Rss"><i class="fa fa-rss"></i></a></li>
+                     <li class="list-inline-item"><a href="#" class="icoFacebook" title="Facebook"><i class="fa fa-facebook"></i></a></li>
+                     <li class="list-inline-item"><a href="#" class="icoTwitter" title="Twitter"><i class="fa fa-twitter"></i></a></li>
+                     <li class="list-inline-item"><a href="#" class="icoGoogle" title="Google +"><i class="fa fa-google-plus"></i></a></li>
+                     <li class="list-inline-item"><a href="#" class="icoLinkedin" title="Linkedin"><i class="fa fa-linkedin"></i></a></li>
+                 </ul>
+    </ul>
+  </ul>
+  <hr>
+  <!-- Copyright -->
+  <div class="footer-copyright text-center py-3">© 2018 Copyright:
+    <a> Ella Duréault and Axelle Janiak</a>
+  </div>
+  <!-- Copyright -->
+</footer>
+<!-- Footer -->
 </html>

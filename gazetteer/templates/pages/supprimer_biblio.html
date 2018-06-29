@@ -1,0 +1,24 @@
+{% extends "conteneur.html" %}
+
+
+{% block corps %}
+<form class="col-3 mr-2 " method="POST" action="{{url_for('supprimer_biblio', biblio_id=biblio.biblio_id)}}">
+<dl>
+
+            <dt>Biblio</dt><dd id="biblio" name="biblio" value="{{biblio.biblio_id}}">{{biblio.biblio_titre}}</dd>
+
+<div class="col-md container mt-3">
+      <div class="row"><!-- supprimer relation_id et non place_id après avoir récupéré relation_place_id et relation_biblio_id-->
+
+        <button type="submit" class="btn btn-success btn-sm">Confirmer</button>
+
+      </form>
+
+
+              		</div>
+        </dl>
+
+
+    <p><a href="{{url_for('accueil')}}">Retour à l'accueil</a></p>
+
+{% endblock %}

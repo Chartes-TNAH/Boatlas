@@ -75,6 +75,90 @@ CREATE TABLE IF NOT EXISTS `gazetteer`.`authorship` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
+-- -----------------------------------------------------
+-- Table `gazetteer`.`relation`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `gazetteer`.`relation` ;
+
+CREATE TABLE IF NOT EXISTS `gazetteer`.`relation` (
+  `relation_id` INT NOT NULL AUTO_INCREMENT,
+  `relation_biblio_id` INT NOT NULL,
+  `relation_place_id` INT NOT NULL,
+  PRIMARY KEY (`relation_id`),
+  INDEX `fk_relation_1_idx` (`relation_place_id` ASC),
+  INDEX `fk_relation_2_idx` (`relation_biblio_id` ASC),
+  CONSTRAINT `fk_relation_1`
+    FOREIGN KEY (`relation_place_id`)
+    REFERENCES `gazetteer`.`place` (`place_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_relation_2`
+    FOREIGN KEY (`relation_biblio_id`)
+    REFERENCES `gazetteer`.`biblio` (`biblio_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- ----------------------------------------------------
+-- Table `gazetteer`.`biblio`
+-- ----------------------------------------------------
+DROP TABLE IF EXISTS `gazetteer`.`biblio` ;
+
+CREATE TABLE IF NOT EXISTS `gazetteer`.`biblio` (
+  `biblio_id` INT NOT NULL AUTO_INCREMENT COMMENT '	',
+  `biblio_titre` TEXT NOT NULL,
+  `biblio_auteur` TEXT NOT NULL,
+  `biblio_date` TEXT NULL,
+  `biblio_lieu` TEXT NULL,
+  `biblio_type` TEXT NOT NULL,
+  PRIMARY KEY (`biblio_id`))
+ENGINE = InnoDB;
+COMMIT;
+/*
+-- -----------------------------------------------------
+-- Table `gazetteer`.`link`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `gazetteer`.`link` ;
+
+CREATE TABLE IF NOT EXISTS `gazetteer`.`link` (
+ `link_id` INT NOT NULL AUTO_INCREMENT,
+  `nature_id` INT NOT NULL,
+  `link_place1_id` INT NOT NULL,
+  `link_place2_id` INT NOT NULL,
+    PRIMARY KEY (`link_id`),
+  INDEX `fk_link_1_idx` (`nature_id` ASC),
+  INDEX `fk_link_2_idx` (`link_place1_id` ASC),
+  INDEX `fk_link_3_idx` (`link_place2_id` ASC),
+  CONSTRAINT `fk_link_1`
+    FOREIGN KEY (`nature_id`)
+    REFERENCES `gazetteer`.`link_relation` (`nature_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_link_2`
+    FOREIGN KEY (`link_place1_id`)
+    REFERENCES `gazetteer`.`place` (`place_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+    CONSTRAINT `fk_link_3`
+      FOREIGN KEY (`link_place2_id`)
+      REFERENCES `gazetteer`.`place` (`place_id`)
+      ON DELETE NO ACTION
+      ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+*/
+
+-- -----------------------------------------------------
+-- Table `gazetteer`.`link_relation`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `gazetteer`.`link_relation` ;
+
+CREATE TABLE IF NOT EXISTS `gazetteer`.`link` (
+  `nature_id` INT NOT NULL AUTO_INCREMENT,
+  `link_relation_type` VARCHAR(45) NOT NULL,
+  `link_relation_description` VARCHAR(240),
+  PRIMARY KEY (`nature_id`))
+ENGINE = InnoDB;
 
 -- -----------------------------------------------------
 -- Table `gazetteer`.`variante`
@@ -131,6 +215,15 @@ INSERT INTO `gazetteer`.`place` ( `place_nom`, `place_description`, `place_longi
 INSERT INTO `gazetteer`.`place` ( `place_nom`, `place_description`, `place_longitude`, `place_latitude`, `place_type`) VALUES ( 'Garumna (river)', 'The Garonne river is a river of southwestern Gaul and northern Iberia.', 44.810025550000006, -0.3184549, 'river');
 INSERT INTO `gazetteer`.`place` ( `place_nom`, `place_description`, `place_longitude`, `place_latitude`, `place_type`) VALUES ( 'Caelius Mons', 'The Caelian Hill in Rome.', 41.88755097676503, 12.491300775912759, 'hill');
 INSERT INTO `gazetteer`.`place` ( `place_nom`, `place_description`, `place_longitude`, `place_latitude`, `place_type`) VALUES ( 'Prinias (Patela)', 'An Iron Age settlement on the Patela plateau north of the modern village of Prinias; its ancient name is uncertain. The site is notable for its occupation from the end of the Bronze Age through to the Archaic period, as well as for the monumental architecture and Orientalizing sculpture of its Buildings (\'Temples\') A and B. ', 35.168633, 25.000922, 'settlement');
+
+INSERT INTO `gazetteer`.`biblio` (`biblio_id`,`biblio_titre`, `biblio_auteur`, `biblio_date`, `biblio_lieu`, `biblio_type`) VALUES ( 1, 'Versailles, un palais pour la sculpture', 'Alexandre Maral', '2013', 'Dijon', 'art history');
+INSERT INTO `gazetteer`.`biblio` (`biblio_id`,`biblio_titre`, `biblio_auteur`, `biblio_date`, `biblio_lieu`, `biblio_type`) VALUES ( 2, 'The Banquet', 'Platon', 'Ve BC.', 'Athens', 'philosophical treaty');
+INSERT INTO `gazetteer`.`biblio` (`biblio_id`,`biblio_titre`, `biblio_auteur`, `biblio_date`, `biblio_lieu`, `biblio_type`) VALUES ( 3, 'Le Phèdre','Platon', 'Ve BC.', 'Athens', 'philosophical treaty');
+INSERT INTO `gazetteer`.`biblio` (`biblio_id`, `biblio_titre`, `biblio_auteur`, `biblio_date`, `biblio_lieu`, `biblio_type`) VALUES ( 4, 'The Iliad', 'Homer', '', '', 'epic');
+INSERT INTO `gazetteer`.`biblio` (`biblio_id`, `biblio_titre`, `biblio_auteur`, `biblio_date`, `biblio_lieu`, `biblio_type`) VALUES ( 5, 'The Odyssey', 'Homer', '', '', 'epic');
+INSERT INTO `gazetteer`.`biblio` (`biblio_id`, `biblio_titre`, `biblio_auteur`, `biblio_date`, `biblio_lieu`, `biblio_type`) VALUES ( 6, 'Works and Days', 'Hesiod', '', '', 'poem');
+
+INSERT INTO `gazetteer`.`relation` (`relation_id`, `relation_biblio_id`, `relation_place_id`) VALUES ('1', '1', '1');
 
 COMMIT;
 
